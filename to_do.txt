@@ -1,0 +1,9 @@
+*TO-DO*                             *PRIORITY*
+
+Make `c.mute`                       B
+
+Make `c.unmute`                     B
+
+Make a warning system               B
+
+Beautify `c.help` (embed)           C

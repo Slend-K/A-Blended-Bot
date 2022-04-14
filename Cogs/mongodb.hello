@@ -1,0 +1,111 @@
+import logging
+import collections
+
+'''
+MongoDB Helper File
+'''
+
+class Document:
+  def __init__(self, connection, document_name):
+
+    #This function sets up the connection.
+
+
+    self.db = connection[document_name]
+    self.logger = logging.getLogger(__name__)
+
+  async def find_by_id(self, id):
+    return await self.db.find_one({"_id": id})
+
+  async def delete_by_id(self, id):
+    """Stops if the ID doesn't match"""
+    if not await self.find_by_id(id):
+      return
+
+    """Deletes the ID if it does match."""
+    await self.db.delete_many({"_id": id})
+
+  async def insert(self, dict):
+    """
+    Insert something into the DB
+    """
+    #Checks if it even is a dictionary
+    if not isinstance(dict, collections.abc.Mapping):
+      raise TypeError("\nI expected a Dictionary but I did not get one.\n")
+
+    if not dict["_id"]:
+      raise KeyError("\n\"_id\" was not found in the supplied Dictionary.\n")
+
+    await self.db.insert_one(dict)
+
+  async def upsert(self, dict):
+    """
+    Makes a new item. If the item already exists it will instead update it.
+    """
+
+    if await self.__get_raw(dict["_id"]) != None:
+      await self.update_by_id(dict)
+    else:
+      await self.db.insert_one(dict)
+
+  async def update_by_id(self, dict):
+    """
+    For when a document already exists and you want to update something in it.
+    """
+
+    # Checks if it is a dictionary.
+    if not isinstance(dict, collections.abc.Mapping):
+      raise TypeError("\nI expected a Dictionary but I did not get one.\n")
+
+    if not dict["_id"]:
+      raise KeyError("\n\"_id\" was not found in the supplied Dictionary.\n")
+
+    if not await self.find_by_id(dict["_id"]):
+      return
+
+    id = dict["_id"]
+    dict.pop("_id")
+    await self.db.update_one({"_id": id}, {"$set": dict})
+
+  async def unset(self, dict):
+    """
+    For when a document already exists and you want to update something in it.
+    """
+
+    # Checks if it is a dictionary.
+    if not isinstance(dict, collections.abc.Mapping):
+      raise TypeError("\nI expected a Dictionary but I did not get one.\n")
+
+    if not dict["_id"]:
+      raise KeyError("\n\"_id\" was not found in the supplied Dictionary.\n")
+
+    if not await self.find_by_id(dict["_id"]):
+      return
+
+    id = dict["_id"]
+    dict.pop("_id")
+    await self.db.update_one({"_id": id}, {"$unset": dict})
+
+  async def increment(self, id, amount, field):
+    """
+    Increment/Increase a given `field` by a given `amount`
+    """
+
+    # Raise if the _id isn't in the database.
+    if not await self.find_by_id(id):
+      return
+
+    await self.db._update_one({"_id": id}, {"$inc": {field: amount}})
+
+  async def get_all(self):
+    """
+    Returns a list of all the data in the document
+    """
+    
+    data = []
+
+    async for document in self.db.find({}):
+      data.append(document)
+    return data
+
+print("mongodb.py fully loaded.")

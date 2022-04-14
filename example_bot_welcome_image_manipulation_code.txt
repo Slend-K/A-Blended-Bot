@@ -1,0 +1,25 @@
+  template = Image.open("bot welcome image.png")
+
+  pfp = member.avatar_url_as(size=256)
+  data = BytesIO(await pfp.read())
+  pfp = Image.open(data)
+
+  pfp = pfp.resize((227, 227))
+
+  name = member.name
+  hashtag = "#"
+  discriminator = member.discriminator
+
+  font = ImageFont.truetype("Pintersan.ttf", 85)
+  draw = ImageDraw.Draw(template)
+  text = name + hashtag + discriminator
+
+  draw.text((575,425), text, (255, 255, 255), font=font)
+
+  template.paste(pfp, (471, 10))
+
+  template.save("personalised bot welcome image.png")
+
+
+
+  await channel.send(f"Hey {member.mention}! Welcome to **__A Blended Server__**! Make sure you read the rules in <#758742018377252875>, verify in <#758751741448945714> and get some roles in <#762768581909413889>", file=discord.File("personalised bot welcome image.png"))
